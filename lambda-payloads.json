@@ -1,0 +1,59 @@
+{
+    "messageHandler": {
+        "lambda": {
+            "resource": "/",
+            "path": "/",
+            "httpMethod": "POST",
+            "headers": {
+                "Accept": "*/*",
+                "CloudFront-Forwarded-Proto": "https",
+                "CloudFront-Is-Desktop-Viewer": "true",
+                "CloudFront-Is-Mobile-Viewer": "false",
+                "CloudFront-Is-SmartTV-Viewer": "false",
+                "CloudFront-Is-Tablet-Viewer": "false",
+                "CloudFront-Viewer-Country": "JP",
+                "Content-Type": "application/json;charset=UTF-8",
+                "Host": "hogehoge",
+                "User-Agent": "LineBotWebhook/1.0",
+                "Via": "1.1 2677530bff5503812e841abf15411e16.cloudfront.net (CloudFront)",
+                "X-Amz-Cf-Id": "6iXmegzPfcoAgccnojJZ6L5utWBnsTHKcCBiwBs4y_Ceik4q00hNQw==",
+                "X-Amzn-Trace-Id": "Root=1-5a4cf49c-69bcf6741ec6933068ae9b5d",
+                "X-Forwarded-For": "203.104.146.157, 54.239.196.67",
+                "X-Forwarded-Port": "443",
+                "X-Forwarded-Proto": "https",
+                "X-Line-Signature": "hogehoge"
+            },
+            "queryStringParameters": null,
+            "pathParameters": null,
+            "stageVariables": null,
+            "requestContext": {
+                "requestTime": "03/Jan/2018:15:19:56 +0000",
+                "path": "/Prod",
+                "accountId": "1111111111111",
+                "protocol": "HTTP/1.1",
+                "resourceId": "u0bv8v0rbd",
+                "stage": "Prod",
+                "requestTimeEpoch": 1514992796032,
+                "requestId": "8df3b1e6-f099-11e7-94f6-bb08a1ed5748",
+                "identity": {
+                    "cognitoIdentityPoolId": null,
+                    "accountId": null,
+                    "cognitoIdentityId": null,
+                    "caller": null,
+                    "sourceIp": "0.0.0.0",
+                    "accessKey": null,
+                    "cognitoAuthenticationType": null,
+                    "cognitoAuthenticationProvider": null,
+                    "userArn": null,
+                    "userAgent": "LineBotWebhook/1.0",
+                    "user": null
+                },
+                "resourcePath": "/",
+                "httpMethod": "POST",
+                "apiId": "hogehoge"
+            },
+            "body": "{\"events\":[{\"type\":\"message\",\"replyToken\":\"hogehoge\",\"source\":{\"userId\":\"hogehogeuser\",\"type\":\"user\"},\"timestamp\":1514992795925,\"message\":{\"type\":\"text\",\"id\":\"hogehogeid\",\"text\":\"あああ\"}}]}",
+            "isBase64Encoded": false
+        }
+    }
+}
