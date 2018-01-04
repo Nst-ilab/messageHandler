@@ -25,11 +25,10 @@ def lambda_handler(event, context):
     textAnalyzeJson = callTextAnalyze(messageText)
     
     # 登録されているサービス一覧から最も応答すべきメッセージを決定する
-    # ここまだ未実装。座間のやつを使う
-    ReplayMessage = lineMessage["events"][0]["message"]["text"]
+    ReplayMessage = priorProcess( lineMessage, textAnalyzeJson )
     
     # LINE側のメッセージAPIにリクエストを送ることで返信とする
-    sendReplayMessage( ReplayMessage, lineMessage["events"][0]["replyToken"] )
+    sendReplayMessage( ReplayMessage["message"], lineMessage["events"][0]["replyToken"] )
     
     # API-Gateway側へのレスポンス
     return returnOk()
@@ -50,13 +49,52 @@ def callTextAnalyze( messageText) :
     textAnalyzeJson = json.loads( textAnalyzeResponse["Payload"].read().decode('utf-8') )
     logger.info( json.dumps( textAnalyzeJson , indent=2))
     return textAnalyzeJson
+
+
+# 子サービスを呼び出して応答メッセージを決定する
+def priorProcess( lineMessage, textAnalyzeJson ) :
+
+    #リアクションサービスのリストは別途Jsonにて管理
+    with open("reactionServices.json", "r") as file:
+        reactionServices = json.load(file)
+        
+    childFunctionList = reactionServices["childFunctionList"]
+
+    childEventSet = {
+        "lineMessage": lineMessage ,
+        "analysedMessage": textAnalyzeJson
+    }
     
+    logger.info("start prior Process")
+    processPriorResponse = clientLambda.invoke(
+        # Calleeのarnを指定
+        FunctionName='cloud9-process-prior-1H48J191V1PVH',
+        # RequestResponse = 同期、Event = 非同期 で実行できます
+        InvocationType='RequestResponse',
+        # byte形式でPayloadを作って渡す
+        Payload=json.dumps( {"functions": childFunctionList, "event": childEventSet }).encode("UTF-8")
+    )
+    #実行結果を読みだして、JSONに変換
+    res = processPriorResponse["Payload"].read().decode('utf-8')
+    logger.info(res)
+    #responseの形式がJSON Stringの二重エンコードになっているように見えるから↓のコード。いまいち
+    priorJson = json.loads( res )
+    priorJson = json.loads( priorJson )
+    logger.info(priorJson)
+    logger.info( json.dumps( priorJson , indent=2, ensure_ascii=False))
+    
+    return priorJson
+
 # LINE側へ応答メッセージを返信する
 def sendReplayMessage( replyMessage, replayToken ):
+
+    logger.info( "startSendReplayMessage" )
+    logger.info( replyMessage )
+    logger.info( replayToken )
     
     url = "https://api.line.me/v2/bot/message/reply"
     method = "POST"
-    # ヘッダ設定 LINE用認証トークンは別途管理
+    # ヘッダ設定 LINE用認証トークンは別途管理(template.yamlにて管理)
     headers = {
         'Authorization':'Bearer ' + os.environ.get('LINE_LONGTIME_TOKEN') ,
         'Content-Type': 'application/json'
