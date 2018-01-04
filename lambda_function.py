@@ -8,34 +8,51 @@ import urllib.request
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
+#Region指定しないと、デフォルトのUSリージョンが使われる
+clientLambda = boto3.client('lambda', region_name='ap-northeast-1')
+
 logger.info('Loading function')
 
 def lambda_handler(event, context):
 
     logger.info("Received event: " + json.dumps(event, indent=2))
-    
-    '''
-    body_object = json.loads(event["body"])
-    messageText = body_object["events"][0]["message"]["text"]
-    
-    if messageText.find("天気") >= 0 :
-        # boto3でLambdaを使う宣言をします
-        clientLambda = boto3.client('lambda')
-        # Calleeを実行します
-        clientLambda.invoke(
-            # Calleeのarnを指定
-            FunctionName='i-lab-weather-service',
-            # RequestResponse = 同期、Event = 非同期 で実行できます
-            InvocationType='Event',
-            # 引数をJSON形式で渡します
-            Payload=json.dumps(event).encode("UTF-8")
-        )
-    '''
-    
-    # LINE側のメッセージAPIにリクエストを送ることで返信とする
-    
     lineMessage = json.loads(event["body"])
     logger.info( json.dumps(lineMessage, indent=2))
+    
+    messageText = lineMessage["events"][0]["message"]["text"]
+    
+    # 形態素解析サービスを利用して、MessageTextの形態素解析JSONを取得
+    textAnalyzeJson = callTextAnalyze(messageText)
+    
+    # 登録されているサービス一覧から最も応答すべきメッセージを決定する
+    # ここまだ未実装。座間のやつを使う
+    ReplayMessage = lineMessage["events"][0]["message"]["text"]
+    
+    # LINE側のメッセージAPIにリクエストを送ることで返信とする
+    sendReplayMessage( ReplayMessage, lineMessage["events"][0]["replyToken"] )
+    
+    # API-Gateway側へのレスポンス
+    return returnOk()
+    
+# TextAnalyzeサービスを呼び出して結果のJsonを取得する
+def callTextAnalyze( messageText) :
+    
+    # 形態素解析サービスを利用して、MessageTextの形態素解析を実施する
+    textAnalyzeResponse = clientLambda.invoke(
+        # Calleeのarnを指定
+        FunctionName='arn:aws:lambda:ap-northeast-1:966887599552:function:cloud9-analyzeText-analyzeText-WPINCA1TJQE5',
+        # RequestResponse = 同期、Event = 非同期 で実行できます
+        InvocationType='RequestResponse',
+        # byte形式でPayloadを作って渡す
+        Payload=json.dumps({"message": messageText}).encode("UTF-8")
+    )
+    #実行結果を読みだして、JSONに変換
+    textAnalyzeJson = json.loads( textAnalyzeResponse["Payload"].read().decode('utf-8') )
+    logger.info( json.dumps( textAnalyzeJson , indent=2))
+    return textAnalyzeJson
+    
+# LINE側へ応答メッセージを返信する
+def sendReplayMessage( replyMessage, replayToken ):
     
     url = "https://api.line.me/v2/bot/message/reply"
     method = "POST"
@@ -44,13 +61,12 @@ def lambda_handler(event, context):
         'Authorization':'Bearer ' + os.environ.get('LINE_LONGTIME_TOKEN') ,
         'Content-Type': 'application/json'
     }
-
     params = {
-        "replyToken": lineMessage["events"][0]["replyToken"] ,
+        "replyToken": replayToken ,
         "messages" : [
             {
                 "type": "text" ,
-                "text": lineMessage["events"][0]["message"]["text"]
+                "text": replyMessage
             }
         ]
     }
@@ -61,11 +77,20 @@ def lambda_handler(event, context):
         logger.info(response.read().decode("utf-8"))
 
     
-    # API-Gateway側へのレスポンス
-    return {
+def returnOk() :
+    return  {
         'statusCode': 200,
-        'body': "応答受けたよ！",
+        'body': "ok",
         'headers': {
             'Content-Type': 'application/json'
-        },
+        }
+    }
+    
+def returnNg( statusCode = 400  ) :
+    return {
+        'statusCode': statusCode,
+        'body': "no response",
+        'headers': {
+            'Content-Type': 'application/json'
+        }
     }
