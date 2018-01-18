@@ -52,7 +52,7 @@
                 "httpMethod": "POST",
                 "apiId": "hogehoge"
             },
-            "body": "{\"events\":[{\"type\":\"message\",\"replyToken\":\"hogehoge\",\"source\":{\"userId\":\"hogehogeuser\",\"type\":\"user\"},\"timestamp\":1514992795925,\"message\":{\"type\":\"text\",\"id\":\"hogehogeid\",\"text\":\"ジャニーズのニュースを教えて\"}}]}",
+            "body": "{\"events\":[{\"type\":\"message\",\"replyToken\":\"hogehoge\",\"source\":{\"userId\":\"hogehogeuser\",\"type\":\"user\"},\"timestamp\":1514992795925,\"message\":{\"type\":\"text\",\"id\":\"hogehogeid\",\"text\":\"悲しい\"}}]}",
             "isBase64Encoded": false
         }
     }

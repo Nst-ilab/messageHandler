@@ -26,9 +26,10 @@ def lambda_handler(event, context):
     
     # 登録されているサービス一覧から最も応答すべきメッセージを決定する
     ReplayMessage = priorProcess( lineMessage, textAnalyzeJson )
+    logger.info(ReplayMessage)
     
     # LINE側のメッセージAPIにリクエストを送ることで返信とする
-    sendReplayMessage( ReplayMessage["message"], lineMessage["events"][0]["replyToken"] )
+    sendReplayMessage( ReplayMessage, lineMessage["events"][0]["replyToken"] )
     
     # API-Gateway側へのレスポンス
     return returnOk()
@@ -99,15 +100,18 @@ def sendReplayMessage( replyMessage, replayToken ):
         'Authorization':'Bearer ' + os.environ.get('LINE_LONGTIME_TOKEN') ,
         'Content-Type': 'application/json'
     }
+    messages = []
+
+    if "message" in replyMessage:
+        messages.append({"type": "text" , "text": replyMessage["message"]})
+    if "stamp" in replyMessage:
+        messages.append({"type": "sticker" , "packageId": replyMessage["stamp"]["packageId"], "stickerId": replyMessage["stamp"]["stickerId"]})
+    
     params = {
         "replyToken": replayToken ,
-        "messages" : [
-            {
-                "type": "text" ,
-                "text": replyMessage
-            }
-        ]
+        "messages" : messages
     }
+    logger.info(params)
     json_data = json.dumps(params).encode("utf-8")
     request = urllib.request.Request(url, data=json_data, headers=headers, method=method)
 
